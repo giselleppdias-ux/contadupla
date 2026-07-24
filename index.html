@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ContaDupla: Finanças PF e PJ</title>
+  <style>
+    /* Reset e Base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #121214;
+      color: #e1e1e6;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden; /* Garante que a página principal não role */
+    }
+
+    /* Container Principal - Tela Única */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 12px 12px 0 12px;
+      justify-content: space-between;
+    }
+
+    /* Header e Título */
+    header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #00b37e;
+      letter-spacing: 0.5px;
+    }
+
+    /* Toggle PF / PJ */
+    .toggle-container {
+      display: flex;
+      background-color: #202024;
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 10px;
+      gap: 4px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 6px 0;
+      border: none;
+      background: transparent;
+      color: #a8a8b3;
+      font-weight: 600;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active {
+      background-color: #121214;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .toggle-btn.pf.active {
+      border-bottom: 2px solid #00b37e;
+    }
+
+    .toggle-btn.pj.active {
+      border-bottom: 2px solid #6170ff;
+    }
+
+    /* Cards de Resumo */
+    .cards-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      flex: 1;
+      background-color: #202024;
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+      border: 1px solid #29292e;
+    }
+
+    .card-title {
+      font-size: 0.65rem;
+      color: #a8a8b3;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .card-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .card-value.saldo-positivo { color: #00b37e; }
+    .card-value.saldo-negativo { color: #f75a68; }
+    .card-value.receita { color: #00b37e; }
+    .card-value.despesa { color: #f75a68; }
+
+    /* Form Lançamento Rápido */
+    .form-box {
+      background-color: #202024;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #29292e;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    select, input {
+      background-color: #121214;
+      border: 1px solid #29292e;
+      color: #e1e1e6;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.75rem;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: #00b37e;
+    }
+
+    .input-tipo { flex: 0.8; }
+    .input-desc { flex: 1.5; }
+    .input-valor { flex: 1; }
+    .input-cat { flex: 1; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 7px;
+      background-color: #00b37e;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit:active {
+      background-color: #00875f;
+    }
+
+    /* Lista de Movimentações */
+    .history-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: #202024;
+      border-radius: 8px 8px 0 0;
+      padding: 8px;
+      border: 1px solid #29292e;
+      border-bottom: none;
+      min-height: 0;
+    }
+
+    .history-title {
+      font-size: 0.75rem;
+      color: #a8a8b3;
+      margin-bottom: 6px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 2px;
+    }
+
+    .history-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .history-list::-webkit-scrollbar-thumb {
+      background-color: #29292e;
+      border-radius: 4px;
+    }
+
+    .item-card {
+      background-color: #121214;
+      padding: 6px 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 3px solid #29292e;
+    }
+
+    .item-card.receita { border-left-color: #00b37e; }
+    .item-card.despesa { border-left-color: #f75a68; }
+
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-desc {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #e1e1e6;
+    }
+
+    .item-cat {
+      font-size: 0.65rem;
+      color: #a8a8b3;
+    }
+
+    .item-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-val {
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .item-val.receita { color: #00b37e; }
+    .item-val.despesa { color: #f75a68; }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: #7c7c8a;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 4px;
+    }
+
+    .btn-delete:hover {
+      color: #f75a68;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #7c7c8a;
+      font-size: 0.75rem;
+      margin-top: 20px;
+    }
+
+    /* Espaço de Publicidade Fixa (AdMob Banner) */
+    .admob-banner {
+      height: 50px;
+      background-color: #202024;
+      border: 1px dashed #4d4d57;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #a8a8b3;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <div>
+    <!-- Header -->
+    <header>
+      <h1>ContaDupla: Finanças PF e PJ</h1>
+    </header>
+
+    <!-- Toggle PF / PJ -->
+    <div class="toggle-container">
+      <button class="toggle-btn pf active" id="btn-pf" onclick="switchMode('PF')">Pessoa Física (PF)</button>
+      <button class="toggle-btn pj" id="btn-pj" onclick="switchMode('PJ')">Pessoa Jurídica (PJ)</button>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-title">Saldo Atual</div>
+        <div class="card-value saldo-positivo" id="lbl-saldo">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Receitas</div>
+        <div class="card-value receita" id="lbl-receita">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Despesas</div>
+        <div class="card-value despesa" id="lbl-despesa">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Form Lançamento Rápido -->
+    <div class="form-box">
+      <div class="form-row">
+        <select id="inp-tipo" class="input-tipo">
+          <option value="receita">Receita (+)</option>
+          <option value="despesa">Despesa (-)</option>
+        </select>
+        <input type="text" id="inp-desc" class="input-desc" placeholder="Descrição (ex: Mercado)" />
+      </div>
+      <div class="form-row">
+        <input type="number" step="0.01" id="inp-valor" class="input-valor" placeholder="Valor (R$)" />
+        <select id="inp-cat" class="input-cat">
+          <!-- Opções preenchidas via JavaScript -->
+        </select>
+      </div>
+      <button class="btn-submit" onclick="adicionarMovimentacao()">+ Salvar Lançamento</button>
+    </div>
+  </div>
+
+  <!-- Histórico / Movimentações Recentes -->
+  <div class="history-section">
+    <div class="history-title">
+      <span>Movimentações Recentes</span>
+      <span id="lbl-modo-ativo" style="color: #00b37e;">[Modo PF]</span>
+    </div>
+    <div class="history-list" id="list-container">
+      <!-- Items inseridos dinamicamente -->
+    </div>
+  </div>
+
+  <!-- Banner de Anúncios AdMob Fixado no Rodapé -->
+  <div class="admob-banner" id="admob-container">
+    <span>[ AdMob Banner - Reservado ]</span>
+  </div>
+</div>
+
+<script>
+  // Categorias
+  const categoriasPF = ["Alimentação", "Moradia", "Transporte", "Saúde", "Lazer", "Outros"];
+  const categoriasPJ = ["Vendas", "Prestação de Serviços", "Fornecedores", "Impostos", "Marketing", "Outros"];
+
+  let modoAtual = 'PF';
+  let db = null;
+
+  function initDB() {
+    const request = indexedDB.open("ContaDuplaDB", 1);
+
+    request.onupgradeneeded = function(e) {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("movimentacoes")) {
+        const store = db.createObjectStore("movimentacoes", { keyPath: "id", autoIncrement: true });
+        store.createIndex("modo", "modo", { unique: false });
+      }
+    };
+
+    request.onsuccess = function(e) {
+      db = e.target.result;
+      renderApp();
+    };
+
+    request.onerror = function(e) {
+      console.error("Erro ao abrir banco de dados local", e);
+    };
+  }
+
+  function switchMode(modo) {
+    modoAtual = modo;
+    
+    document.getElementById('btn-pf').classList.toggle('active', modo === 'PF');
+    document.getElementById('btn-pj').classList.toggle('active', modo === 'PJ');
+    document.getElementById('lbl-modo-ativo').textContent = `[Modo ${modo}]`;
+    document.getElementById('lbl-modo-ativo').style.color = modo === 'PF' ? '#00b37e' : '#6170ff';
+
+    carregarCategorias();
+    renderApp();
+  }
+
+  function carregarCategorias() {
+    const catSelect = document.getElementById('inp-cat');
+    catSelect.innerHTML = '';
+    const lista = modoAtual === 'PF' ? categoriasPF : categoriasPJ;
+    
+    lista.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      catSelect.appendChild(opt);
+    });
+  }
+
+  function adicionarMovimentacao() {
+    const tipo = document.getElementById('inp-tipo').value;
+    const desc = document.getElementById('inp-desc').value.trim();
+    const valor = parseFloat(document.getElementById('inp-valor').value);
+    const cat = document.getElementById('inp-cat').value;
+
+    if (!desc || isNaN(valor) || valor <= 0) {
+      alert("Por favor, preencha a descrição e um valor válido.");
+      return;
+    }
+
+    const item = {
+      modo: modoAtual,
+      tipo: tipo,
+      descricao: desc,
+      valor: valor,
+      categoria: cat,
+      data: new Date().toISOString()
+    };
+
+    const transaction = db.transaction(["movimentacoes"], "readwrite");
+    const store = transaction.objectStore("movimentacoes");
+    store.add(item);
+
+    transaction.oncomplete = function() {
+      document.getElementById('inp-desc').value = '';
+      document.getElementById('inp-valor').value = '';
+      renderApp();
+    };
+  }
+
+  function deletarMovimentacao(id) {
+    const transaction = db.transaction(["movimentacoes"], "readwrite");
+    const store = transaction.objectStore("movimentacoes");
+    store.delete(id);
+
+    transaction.oncomplete = function() {
+      renderApp();
+    };
+  }
+
+  function renderApp() {
+    if (!db) return;
+
+    const transaction = db.transaction(["movimentacoes"], "readonly");
+    const store = transaction.objectStore("movimentacoes");
+    const index = store.index("modo");
+    const request = index.getAll(modoAtual);
+
+    request.onsuccess = function() {
+      const lista = request.result || [];
+      
+      let totalReceita = 0;
+      let totalDespesa = 0;
+
+      const container = document.getElementById('list-container');
+      container.innerHTML = '';
+
+      if (lista.length === 0) {
+        container.innerHTML = '<div class="empty-msg">Nenhuma movimentação registrada em ' + modoAtual + '.</div>';
+      } else {
+        lista.sort((a, b) => b.id - a.id);
+
+        lista.forEach(item => {
+          if (item.tipo === 'receita') {
+            totalReceita += item.valor;
+          } else {
+            totalDespesa += item.valor;
+          }
+
+          const card = document.createElement('div');
+          card.className = `item-card ${item.tipo}`;
+          card.innerHTML = `
+            <div class="item-info">
+              <span class="item-desc">${escapeHtml(item.descricao)}</span>
+              <span class="item-cat">${escapeHtml(item.categoria)}</span>
+            </div>
+            <div class="item-right">
+              <span class="item-val ${item.tipo}">
+                ${item.tipo === 'receita' ? '+' : '-'} R$ ${item.valor.toFixed(2).replace('.', ',')}
+              </span>
+              <button class="btn-delete" onclick="deletarMovimentacao(${item.id})" title="Excluir">🗑️</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      const saldo = totalReceita - totalDespesa;
+      const lblSaldo = document.getElementById('lbl-saldo');
+      lblSaldo.textContent = `R$ ${saldo.toFixed(2).replace('.', ',')}`;
+      lblSaldo.className = `card-value ${saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo'}`;
+
+      document.getElementById('lbl-receita').textContent = `R$ ${totalReceita.toFixed(2).replace('.', ',')}`;
+      document.getElementById('lbl-despesa').textContent = `R$ ${totalDespesa.toFixed(2).replace('.', ',')}`;
+    };
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+  }
+
+  window.onload = function() {
+    carregarCategorias();
+    initDB();
+  };
+</script>
+</body>
+</html>
