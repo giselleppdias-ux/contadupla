@@ -1,0 +1,17 @@
+{
+  "name": "ContaDupla: Finanças PF e PJ",
+  "short_name": "ContaDupla",
+  "description": "Gestão financeira simples para autônomos e pequenos negócios.",
+  "start_url": "/contadupla/",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#121214",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2845/2845831.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
