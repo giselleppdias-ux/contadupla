@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.giselleppdias_ux.contadupla.app",
+      "sha256_cert_fingerprints":
+        ["9C:F3:45:0B:F3:91:E6:90:0E:A4:FF:CE:CE:F2:DE:91:01:A0:29:26:78:D5:3E:25:89:BC:ED:38:D3:FE:8B:D3"]
+    }
+  }
+]
